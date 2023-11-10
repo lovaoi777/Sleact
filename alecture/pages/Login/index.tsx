@@ -39,7 +39,7 @@ const Login = () => {
 
   if (!error && data) {
     console.log('로그인됨', data);
-    return <Navigate to="/workspace/channel" />;
+    return <Navigate to="/workspace/sleact/channel/일반" />;
   }
   return (
     <div id="container">
