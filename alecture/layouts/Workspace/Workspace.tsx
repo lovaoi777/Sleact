@@ -32,6 +32,8 @@ import CreateChannelModal from '@components/CreateChannelModal';
 import { useParams } from 'react-router';
 import InviteWorkspaceModal from '@components/InviteWorkspaceModal';
 import InviteChannelModal from '@components/InviteChannelModal';
+import ChannelList from '@components/ChannelList';
+import DMList from '@components/DMList';
 
 const Channel = loadable(() => import('@pages/Channel'));
 const DirectMessage = loadable(() => import('@pages/DirectMessage'));
@@ -54,6 +56,10 @@ const Workspace: VFC = () => {
   } = useSWR<IUser | false>('http://localhost:3095/api/users', fetcher);
   const { data: channelData } = useSWR<IChannel[]>(
     userData ? `http://localhost:3095/api/workspaces/${workspace}/channels` : null,
+    fetcher,
+  );
+  const { data: MemberData } = useSWR<IChannel[]>(
+    userData ? `http://localhost:3095/api/workspaces/${workspace}/members` : null,
     fetcher,
   );
   const onLogout = useCallback(() => {
@@ -85,7 +91,9 @@ const Workspace: VFC = () => {
     setShowInviteWorkspaceModal(false);
     setShowInviteChannelModal(false);
   }, []);
-  const onClickInviteWorkspace = useCallback(() => {}, []);
+  const onClickInviteWorkspace = useCallback(() => {
+    setShowInviteWorkspaceModal(true);
+  }, []);
   const onCreateWorkSpace = useCallback(
     (e) => {
       e.preventDefault();
@@ -150,7 +158,6 @@ const Workspace: VFC = () => {
               <Link key={ws.id} to={`/workspace/${ws.url}/channel/일반`}>
                 <WorkspaceButton>{ws.name.slice(0, 1).toUpperCase()}</WorkspaceButton>
               </Link>
-
             );
           })}
           <AddButton onClick={onClickCreateWorkSpace}>+</AddButton>
@@ -166,6 +173,8 @@ const Workspace: VFC = () => {
                 <button onClick={onLogout}>로그아웃 </button>
               </WorkspaceModal>
             </Menu>
+            <ChannelList />
+            <DMList />
             {channelData?.map((v) => {
               return <div>{v.name}</div>;
             })}
