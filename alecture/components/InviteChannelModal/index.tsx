@@ -8,10 +8,11 @@ import React, { FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import useSWR from 'swr';
+
 interface Props {
   show: boolean;
   onCloseModal: () => void;
-  setShowInviteChannelModal: (fleg: boolean) => void;
+  setShowInviteChannelModal: (flag: boolean) => void;
 }
 const InviteChannelModal: FC<Props> = ({ show, onCloseModal, setShowInviteChannelModal }) => {
   const { workspace, channel } = useParams<{ workspace: string; channel: string }>();
@@ -21,6 +22,7 @@ const InviteChannelModal: FC<Props> = ({ show, onCloseModal, setShowInviteChanne
     userData ? `http://localhost:3095/api/workspaces/${workspace}/channels/${channel}/members` : null,
     fetcher,
   );
+
   const onInviteMember = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -28,7 +30,7 @@ const InviteChannelModal: FC<Props> = ({ show, onCloseModal, setShowInviteChanne
         return;
       }
       axios
-        .post(`http://localhost:3095/api/workspaces/${workspace}/channels/${channel}/members`, {
+        .post(`/api/workspaces/${workspace}/channels/${channel}/members`, {
           email: newMember,
         })
         .then((response) => {
@@ -43,6 +45,7 @@ const InviteChannelModal: FC<Props> = ({ show, onCloseModal, setShowInviteChanne
     },
     [channel, newMember, mutateMembers, setNewMember, setShowInviteChannelModal, workspace],
   );
+
   return (
     <Modal show={show} onCloseModal={onCloseModal}>
       <form onSubmit={onInviteMember}>

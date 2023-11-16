@@ -1,4 +1,4 @@
-import React, { useState, useCallback, VFC } from 'react';
+import React, { useCallback, VFC } from 'react';
 import Modal from '@components/Modal';
 import { Button, Input, Label } from '@pages/SignUp/styles';
 import useInput from '@hooks/useInput';
@@ -12,39 +12,45 @@ import fetcher from '@utils/fetcher';
 interface Props {
   show: boolean;
   onCloseModal: () => void;
-  setShowCreateChannelModal: (fleg: boolean) => void;
+  setShowCreateChannelModal: (flag: boolean) => void;
 }
 
 const CreateChannelModal: VFC<Props> = ({ show, onCloseModal, setShowCreateChannelModal }) => {
   const [newChannel, onChangeNewChannel, setNewChannel] = useInput('');
   let { workspace } = useParams<{ workspace?: string }>();
+  const { data: userData, error, mutate } = useSWR<IUser | false>('http://localhost:3095/api/users', fetcher);
+  const { mutate: mutateChannel } = useSWR<IChannel[]>(
+    userData ? `http://localhost:3095/api/workspaces/${workspace}/channels` : null,
+    fetcher,
+  );
+
+  // const { data: userData, error, mutate } = useSWR<IUser | false>('/api/users', fetcher);
+  // const { mutate: mutateChannel } = useSWR<IChannel[]>(
+  //   userData ? `/api/workspaces/${workspace}/channels` : null,
+  //   fetcher,
+  // );
   const onCreateChannel = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault();
-      const {
-        data: userData,
-        error,
-        revalidate,
-        mutate,
-      } = useSWR<IUser | false>('http://localhost:3095/api/users', fetcher);
-      const { data: channelData, revalidate: revalidateChannel } = useSWR<IChannel[]>(
-        userData ? `http://localhost:3095/api/workspaces/${workspace}/channels` : null,
-        fetcher,
-      );
       axios
         .post(
           `http://localhost:3095/api/workspaces/${workspace}/channels`,
-          { name: newChannel },
+          {
+            name: newChannel,
+          },
           { withCredentials: true },
         )
-        .then(() => {
-          revalidateChannel();
+        .then((respone) => {
+          mutateChannel(respone.data, false);
           setShowCreateChannelModal(false);
           setNewChannel('');
         })
-        .catch((error) => toast.error(error?.data, { position: toast.POSITION.TOP_CENTER, autoClose: 1500 }));
+        .catch((error) => {
+          console.dir(error);
+          toast.error(error.response?.data, { position: 'bottom-center' });
+        });
     },
-    [newChannel],
+    [newChannel, workspace],
   );
 
   return (
@@ -52,7 +58,7 @@ const CreateChannelModal: VFC<Props> = ({ show, onCloseModal, setShowCreateChann
       <Modal show={show} onCloseModal={onCloseModal}>
         <form onSubmit={onCreateChannel}>
           <Label id="channel-label">
-            <span>채널</span>
+            <span>채널 이름</span>
             <Input id="channel " value={newChannel} onChange={onChangeNewChannel} />
           </Label>
           <Button type="submit">생성하기 </Button>
